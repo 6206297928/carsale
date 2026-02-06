@@ -7,39 +7,28 @@ import { revalidatePath } from "next/cache";
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
-
-  if (!session) {
-    return NextResponse.json({ error: "Please Login to Book" }, { status: 401 });
-  }
+  if (!session) return NextResponse.json({ error: "Please Login" }, { status: 401 });
 
   try {
-    const { carId, transactionId } = await req.json();
+    const { carId, transactionId, phone } = await req.json(); // <--- Receive Phone
     
-    if (!transactionId) {
-      return NextResponse.json({ error: "Transaction ID is required" }, { status: 400 });
+    if (!transactionId || !phone) {
+      return NextResponse.json({ error: "Transaction ID and Phone are required" }, { status: 400 });
     }
 
     await connectDB();
-
-    // Check if car is still available
-    const car = await Car.findById(carId);
-    if (!car || car.status !== 'AVAILABLE') {
-      return NextResponse.json({ error: "Car is already booked!" }, { status: 400 });
-    }
-
-    // Mark as BOOKED and save the Payment ID
+    
     await Car.findByIdAndUpdate(carId, {
         status: "BOOKED",
         buyerId: session.user.email,
+        buyerPhone: phone, // <--- Save Phone
         transactionId: transactionId
     });
 
-    // Refresh pages
     revalidatePath('/');
-    revalidatePath('/profile');
+    revalidatePath('/admin/dashboard');
 
     return NextResponse.json({ message: "Booking Successful", success: true });
-
   } catch (error) {
     return NextResponse.json({ error: "Booking Failed" }, { status: 500 });
   }

@@ -1,30 +1,35 @@
-import { Inter } from "next/font/google";
 import "./globals.css";
-import AuthProvider from "@/components/AuthProvider"; // Keep your AuthProvider
-import Navbar from "@/components/Navbar"; // <--- Import the new Navbar
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import AuthProvider from "@/components/AuthProvider";
 
-const inter = Inter({ subsets: ["latin"] });
-
+// Metadata for SEO and Favicon
 export const metadata = {
-  title: "CARSALE - Buy & Sell Cars",
-  description: "The best place to find your dream car.",
+  title: "CARSALE - Premium Used Cars",
+  description: "Buy and Sell Verified Used Cars",
+  icons: {
+    icon: '/car.png', 
+  },
 };
 
+// The Main Layout Component
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <head>
-        {/* Razorpay Script is loaded in BuyButton, but can be here too */}
-        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-      </head>
-      <body className={inter.className}>
+      <body className="bg-gray-50 text-black font-sans flex flex-col min-h-screen">
         <AuthProvider>
           
-          {/* The Smart Navbar goes here */}
+          {/* Navbar at top */}
           <Navbar />
           
-          {children}
-        
+          {/* Main content expands to fill space */}
+          <main className="flex-grow">
+            {children}
+          </main>
+
+          {/* Footer at bottom */}
+          <Footer /> 
+
         </AuthProvider>
       </body>
     </html>

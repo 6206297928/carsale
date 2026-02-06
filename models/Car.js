@@ -18,8 +18,7 @@ const CarSchema = new mongoose.Schema({
   
   sellerId: { type: String }, 
   buyerId: { type: String },
-  
-  // 🆕 ADD THIS: To store the UTR/Transaction ID
+  buyerPhone: { type: String }, // <--- New Field
   transactionId: { type: String, default: null } 
 
 }, { timestamps: true });
