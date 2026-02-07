@@ -1,11 +1,17 @@
 import mongoose from "mongoose";
 
 const RideSchema = new mongoose.Schema({
+  // 🟢 Make userId Optional (So guests can book)
+  userId: { type: String, default: "Guest" }, 
+  
   source: { type: String, required: true },
   destination: { type: String, required: true },
   date: { type: String, required: true },
-  carType: { type: String, enum: ['Sedan', 'SUV', 'Luxury'], default: 'Sedan' },
-  userPhone: { type: String, required: true }, // 📞 Crucial for Admin to call back
+  carType: { type: String, default: '4 Seater' },
+  
+  // 📞 Phone is the most important field now
+  userPhone: { type: String, required: true }, 
+  
   status: { 
     type: String, 
     enum: ['PENDING', 'CONTACTED', 'COMPLETED', 'CANCELLED'], 
