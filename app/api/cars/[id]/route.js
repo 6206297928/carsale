@@ -4,29 +4,16 @@ import Car from "@/models/Car";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-// GET Single Car (For Details Page)
+// GET Single Car
 export async function GET(req, { params }) {
+  // 🟢 FIX 1: Await params before using them
+  const { id } = await params; 
+  
   await connectDB();
-  const car = await Car.findById(params.id);
+  const car = await Car.findById(id);
+  
   if (!car) return NextResponse.json({ error: "Car not found" }, { status: 404 });
   return NextResponse.json(car);
-}
-
-// DELETE Car (Admin or Owner)
-export async function DELETE(req, { params }) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  await connectDB();
-  const car = await Car.findById(params.id);
-
-  // Allow if user is Admin OR if user is the Seller
-  if (session.user.role === 'admin' || car.sellerId === session.user.email) {
-    await Car.findByIdAndDelete(params.id);
-    return NextResponse.json({ message: "Car Deleted" });
-  } else {
-    return NextResponse.json({ error: "Permission Denied" }, { status: 403 });
-  }
 }
 
 // PUT (Update) Car
@@ -34,10 +21,34 @@ export async function PUT(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // 🟢 FIX 1: Await params here too
+  const { id } = await params;
+
   const body = await req.json();
   await connectDB();
 
-  // Update logic here...
-  await Car.findByIdAndUpdate(params.id, body);
-  return NextResponse.json({ message: "Car Updated" });
+  const updatedCar = await Car.findByIdAndUpdate(id, body, { new: true });
+  return NextResponse.json({ message: "Car Updated", car: updatedCar });
+}
+
+// DELETE Car
+export async function DELETE(req, { params }) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // 🟢 FIX 1: Await params here too
+  const { id } = await params;
+
+  await connectDB();
+  const car = await Car.findById(id);
+
+  if (!car) return NextResponse.json({ error: "Car not found" }, { status: 404 });
+
+  // Allow if Admin OR Seller
+  if (session.user.role === 'admin' || car.sellerId === session.user.email) {
+    await Car.findByIdAndDelete(id);
+    return NextResponse.json({ message: "Car Deleted" });
+  } else {
+    return NextResponse.json({ error: "Permission Denied" }, { status: 403 });
+  }
 }
