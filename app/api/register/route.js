@@ -1,26 +1,41 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
+import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
-    const { name, email, password, role } = await req.json();
+    const { name, email, password, secretKey } = await req.json();
+
+    if (!name || !email || !password) {
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    }
+
     await connectDB();
 
     // Check if user exists
-    const existing = await User.findOne({ email });
-    if (existing) return NextResponse.json({ error: "Email already exists" }, { status: 400 });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return NextResponse.json({ error: "Email already registered" }, { status: 400 });
+    }
 
-    // Create User (Role will be 'customer' by default unless you send 'admin')
-    // Security Note: In a real app, you wouldn't let the API set 'admin' role freely.
-    await User.create({ 
-      name, 
-      email, 
-      password, // In real app: await bcrypt.hash(password, 10)
-      role: role || "customer" 
+    // 🕵️ SECRET KEY CHECK
+    // If they typed 'admin123', they become Admin. Otherwise, simple User.
+    const role = secretKey === "admin123" ? "admin" : "user";
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: role, 
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+        message: role === "admin" ? "Admin Account Created! 👑" : "Account Created Successfully" 
+    });
+
   } catch (error) {
     return NextResponse.json({ error: "Registration failed" }, { status: 500 });
   }
